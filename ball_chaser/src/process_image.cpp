@@ -36,18 +36,54 @@ void process_image_callback(const sensor_msgs::Image img)
     // Then, identify if this pixel falls in the left, mid, or right side of the image
     // Depending on the white ball position, call the drive_robot function and pass velocities to it
     // Request a stop when there's no white ball seen by the camera
-    int rows = sizeof img.data / sizeof img.data[0];
-    int cols = sizeof img.data[0] / sizeof(uint8_t);
 
-    std::stringstream ss;
-    ss << "My rols:" << rows << ", My cols: " << cols << ", official rols: " << img.height << ", official cols: " << img.width;
+    // image.data = image.height x image.width x 3, has been flattened out to a 1D array
+    // int rows = sizeof img.data / sizeof img.data[0];
+    // int cols = sizeof img.data[0] / sizeof(uint8_t);
+
+    std::stringstream ss, ss1;
+    // ss << "My rols:" << rows << ", My cols: " << cols << ", official rols: " << img.height << ", official cols: " << img.width << ", sizeof data: " << img.data.size();
+    ss << ", official rols: " << img.height << ", official cols: " << img.width << ", step: " << img.step << ", sizeof data: " << img.data.size();
     std::string s = ss.str();
     ROS_INFO_STREAM(s);
 
-    // for i in row:
-    //     for j in col[0,1/3]:
-    //         if img[i, j] == white_pixel:
-    //             left_count++;
+    for(int i = 0; i < (int)(img.width/3); i++)
+    {
+        for(int j = 0; j < img.height; j++)
+        {
+            if (img.data[i + img.step*j] == white_pixel && 
+            img.data[i+img.width + img.step*j] == white_pixel && 
+            img.data[i + 2*img.width + img.step*j] == white_pixel)
+                left_count++;
+        };
+    };
+
+    for(int i = (int)(img.width/3); i < (int)(img.width*2/3); i++)
+    {
+        for(int j = 0; j < img.height; j++)
+        {
+            if (img.data[i + img.step*j] == white_pixel && 
+            img.data[i+img.width + img.step*j] == white_pixel && 
+            img.data[i + 2*img.width + img.step*j] == white_pixel)
+                mid_count++;
+        };
+    };
+
+    for(int i = (int)(img.width*2/3); i < img.width; i++)
+    {
+        for(int j = 0; j < img.height; j++)
+        {
+            if (img.data[i + img.step*j] == white_pixel && 
+            img.data[i+img.width + img.step*j] == white_pixel && 
+            img.data[i + 2*img.width + img.step*j] == white_pixel)
+                right_count++;
+        };
+    };
+
+
+    ROS_INFO_STREAM(left_count);
+    ROS_INFO_STREAM(mid_count);
+    ROS_INFO_STREAM(right_count);
 
     // for i in row:
     //     for j in col[1/3, 2/3]:
