@@ -12,7 +12,7 @@ bool ball_presence = false;
 void drive_robot(float lin_x, float ang_z)
 {
     // TODO: Request a service and pass the velocities to it to drive the robot
-    ROS_INFO_STREAM("Requesting rover to move");
+    // ROS_INFO_STREAM("Requesting rover to move");
 
     ball_chaser::DriveToTarget srv;
     srv.request.linear_x = lin_x;
@@ -41,77 +41,70 @@ void process_image_callback(const sensor_msgs::Image img)
     // int rows = sizeof img.data / sizeof img.data[0];
     // int cols = sizeof img.data[0] / sizeof(uint8_t);
 
-    std::stringstream ss, ss1;
-    // ss << "My rols:" << rows << ", My cols: " << cols << ", official rols: " << img.height << ", official cols: " << img.width << ", sizeof data: " << img.data.size();
-    ss << ", official rols: " << img.height << ", official cols: " << img.width << ", step: " << img.step << ", sizeof data: " << img.data.size();
-    std::string s = ss.str();
-    ROS_INFO_STREAM(s);
-
-    for(int i = 0; i < (int)(img.width/3); i++)
+    for(int i = 0; i < (int)(img.step/3); i += 3)
     {
         for(int j = 0; j < img.height; j++)
         {
             if (img.data[i + img.step*j] == white_pixel && 
-            img.data[i+img.width + img.step*j] == white_pixel && 
-            img.data[i + 2*img.width + img.step*j] == white_pixel)
+            img.data[i+1 + img.step*j] == white_pixel && 
+            img.data[i+2 + img.step*j] == white_pixel)
                 left_count++;
-        };
-    };
+        }
+    }
 
-    for(int i = (int)(img.width/3); i < (int)(img.width*2/3); i++)
+    for(int i = (int)(img.step/3); i < (int)(img.step*2/3); i += 3)
     {
         for(int j = 0; j < img.height; j++)
         {
             if (img.data[i + img.step*j] == white_pixel && 
-            img.data[i+img.width + img.step*j] == white_pixel && 
-            img.data[i + 2*img.width + img.step*j] == white_pixel)
+            img.data[i+1 + img.step*j] == white_pixel && 
+            img.data[i+2 + img.step*j] == white_pixel)
                 mid_count++;
-        };
-    };
+        }
+    }
 
-    for(int i = (int)(img.width*2/3); i < img.width; i++)
+    for(int i = (int)(img.step*2/3); i < img.step; i += 3)
     {
         for(int j = 0; j < img.height; j++)
         {
             if (img.data[i + img.step*j] == white_pixel && 
-            img.data[i+img.width + img.step*j] == white_pixel && 
-            img.data[i + 2*img.width + img.step*j] == white_pixel)
+            img.data[i+1 + img.step*j] == white_pixel && 
+            img.data[i+2 + img.step*j] == white_pixel)
                 right_count++;
-        };
-    };
+        }
+    }
 
 
-    ROS_INFO_STREAM(left_count);
-    ROS_INFO_STREAM(mid_count);
-    ROS_INFO_STREAM(right_count);
+    // ROS_INFO_STREAM(left_count);
+    // ROS_INFO_STREAM(mid_count);
+    // ROS_INFO_STREAM(right_count);
 
-    // for i in row:
-    //     for j in col[1/3, 2/3]:
-    //         if img[i, j] == white_pixel:
-    //             mid_count++;
-
-    // for i in row:
-    //     for j in col[2/3, 1]:
-    //         if img[i, j] == white_pixel:
-    //             right_count++;
-
-    // // Did not find the ball
-    // if left_count == 0 && mid_count == 0 && right_count == 0:
-    //     ball_presence = false;
-    //     drive_robot(0.0, 0.0);
-    //     return;
-    // // Find the ball
-    // if left_count >= max(mid_count, right_count):
-    //     ball_presence = true;
-    //     drive_robot(0.1, 0.1);
-    //     return;
-    // if mid_count >= max(left_count, right_count):
-    //     ball_presence = true;
-    //     drive_robot(0.1, 0.0);
-    //     return;
-    // if right_count >= max(left_count, mid_count):
-    //     drive_robot(0.1, -0.1);
-    //     return;
+    // Did not find the ball
+    if (left_count == 0 && mid_count == 0 && right_count == 0)
+    {
+        ball_presence = false;
+        drive_robot(0.0, 0.0);
+        return;
+    }
+    // Find the ball
+    if (left_count >= std::max(mid_count, right_count))
+    {
+        ball_presence = true;
+        drive_robot(0.1, 0.1);
+        return;
+    }
+    if (mid_count >= std::max(left_count, right_count))
+    {
+        ball_presence = true;
+        drive_robot(0.1, 0.0);
+        return;
+    }
+    if (right_count >= std::max(left_count, mid_count))
+    {
+        ball_presence = true;
+        drive_robot(0.1, -0.1);
+        return;
+    }
 
     // TODO: add in the lidar data so the robot does not run into the ball
 
