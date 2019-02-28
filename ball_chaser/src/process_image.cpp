@@ -74,16 +74,12 @@ void process_image_callback(const sensor_msgs::Image img)
         }
     }
 
-
-    // ROS_INFO_STREAM(left_count);
-    // ROS_INFO_STREAM(mid_count);
-    // ROS_INFO_STREAM(right_count);
-
     // Did not find the ball
     if (left_count == 0 && mid_count == 0 && right_count == 0)
     {
         ball_presence = false;
         drive_robot(0.0, 0.0);
+        ROS_INFO_STREAM("stopped");
         return;
     }
     // Find the ball
@@ -91,18 +87,21 @@ void process_image_callback(const sensor_msgs::Image img)
     {
         ball_presence = true;
         drive_robot(0.1, 0.1);
+        ROS_INFO_STREAM("moving left");
         return;
     }
     if (mid_count >= std::max(left_count, right_count))
     {
         ball_presence = true;
         drive_robot(0.1, 0.0);
+        ROS_INFO_STREAM("moving straight");
         return;
     }
     if (right_count >= std::max(left_count, mid_count))
     {
         ball_presence = true;
         drive_robot(0.1, -0.1);
+        ROS_INFO_STREAM("moving right");
         return;
     }
 
